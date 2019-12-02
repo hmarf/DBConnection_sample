@@ -1,0 +1,9 @@
+
+CREATE SCHEMA IF NOT EXISTS `sampleDB` DEFAULT CHARACTER SET utf8 ;
+USE `sampleDB` ;
+
+CREATE TABLE IF NOT EXISTS `sampleDB`.`user` (
+  `name` VARCHAR(128) NOT NULL COMMENT 'name',
+  `createdAt` datetime DEFAULT NULL
+)
+ENGINE = InnoDB
