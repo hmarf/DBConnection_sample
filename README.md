@@ -7,7 +7,7 @@ mysql> mysql -u root -p
 
 max connection の数を確認
 ```
-mysql> show variables like "%max_connections%;
+mysql> show variables like "%max_connections%";
 +-----------------+-------+
 | Variable_name   | Value |
 +-----------------+-------+
@@ -19,4 +19,9 @@ mysql> show variables like "%max_connections%;
 max connection の数変更 ( 今回は10にした )
 ```
 set global max_connections = 10;
+```
+
+処理中の接続の確認
+```
+show processlist;
 ```

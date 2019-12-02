@@ -23,6 +23,9 @@ func main() {
 	DB := initDB()
 	defer DB.Close()
 
+	// connection数 の制限
+	DB.SetMaxOpenConns(9)
+
 	rootHandler := func(w http.ResponseWriter, r *http.Request) {
 		result, err := DB.Exec("INSERT INTO user(name,createdAt) VALUES(?,?)", "aaa", time.Now())
 		if err != nil {
