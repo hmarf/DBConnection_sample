@@ -31,8 +31,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(result)
 		fmt.Println(time.Now())
+		w.WriteHeader(200)
 	}
 
 	http.HandleFunc("/", rootHandler)
