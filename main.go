@@ -5,10 +5,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/carlescere/scheduler"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+type insertData struct {
+	name      string
+	createdAT time.Time
+}
 
 func initDB() *sql.DB {
 	db, err := sql.Open("mysql", "user:password@tcp(0.0.0.0)/sampleDB?parseTime=true")
@@ -16,6 +23,37 @@ func initDB() *sql.DB {
 		panic(err.Error())
 	}
 	return db
+}
+
+func insertDB(ch *chan insertData, db *sql.DB) {
+
+	rescInterface := []interface{}{}
+	stmt := "INSERT INTO user(name, createdAt) VALUES"
+	insertFlag := false
+LOOP:
+	for {
+		select {
+		case data, ok := <-*ch:
+			if ok {
+				insertFlag = true
+				stmt += "(?,?),"
+				rescInterface = append(rescInterface, data.name)
+				rescInterface = append(rescInterface, data.createdAT)
+			}
+		default:
+			break LOOP
+		}
+	}
+
+	if insertFlag {
+		stmt = strings.TrimRight(stmt, ",")
+
+		_, err := db.Exec(stmt, rescInterface...)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	return
 }
 
 func main() {
@@ -26,13 +64,16 @@ func main() {
 	// connection数 の制限
 	DB.SetMaxOpenConns(9)
 
+	channel := make(chan insertData, 100000)
+
+	_, _ = scheduler.Every(5).Seconds().NotImmediately().Run(func() { insertDB(&channel, DB) })
+
 	rootHandler := func(w http.ResponseWriter, r *http.Request) {
-		result, err := DB.Exec("INSERT INTO user(name,createdAt) VALUES(?,?)", "aaa", time.Now())
-		if err != nil {
-			log.Fatal(err)
+		channel <- insertData{
+			name:      "test user",
+			createdAT: time.Now(),
 		}
-		fmt.Println(result)
-		fmt.Println(time.Now())
+		w.WriteHeader(200)
 	}
 
 	http.HandleFunc("/", rootHandler)
